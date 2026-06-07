@@ -58,7 +58,18 @@ func (r *RuleRepo) GetAll(ctx context.Context) ([]engine.Rule, error) {
 	return rules, nil
 }
 
-func (r *RuleRepo) GetEnabled(ctx context.Context) ([]engine.Rule, error)
+func (r *RuleRepo) GetEnabled(ctx context.Context) ([]engine.Rule, error) {
+	rows, err := r.queries.GetEnabledRules(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var rules []engine.Rule
+	for _, row := range rows {
+		rules = append(rules, toEngineRule(row))
+	}
+	return rules, nil
+}
+
 func (r *RuleRepo) Update(ctx context.Context, rule engine.Rule) (engine.Rule, error)
 func (r *RuleRepo) Delete(ctx context.Context, id string) error
 
