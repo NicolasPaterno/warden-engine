@@ -39,7 +39,10 @@ func main() {
 	}()
 
 	if err := sub.Subscribe(ctx, func(ctx context.Context, reading *sensorv1.SensorReading) {
-		slog.Info("reading received", "room", reading.Room, "type", reading.Type, "value", reading.Value)
+		slog.Info("reading received",
+			"room", reading.Room,
+			"type", reading.Type,
+			"value", reading.Value)
 	}); err != nil {
 		slog.Error("failed to subscribe", "error", err)
 		os.Exit(1)
