@@ -37,7 +37,13 @@ func (r *RuleRepo) Save(ctx context.Context, rule engine.Rule) (engine.Rule, err
 	}
 	return toEngineRule(created), nil
 }
-func (r *RuleRepo) GetByID(ctx context.Context, id string) (engine.Rule, error)
+func (r *RuleRepo) GetByID(ctx context.Context, id string) (engine.Rule, error) {
+	rule, err := r.queries.GetRuleByID(ctx, id)
+	if err != nil {
+		return engine.Rule{}, err
+	}
+	return toEngineRule(rule), nil
+}
 func (r *RuleRepo) GetAll(ctx context.Context) ([]engine.Rule, error)
 func (r *RuleRepo) GetEnabled(ctx context.Context) ([]engine.Rule, error)
 func (r *RuleRepo) Update(ctx context.Context, rule engine.Rule) (engine.Rule, error)
