@@ -9,8 +9,10 @@ import (
 
 	"github.com/NicolasPaterno/warden-engine/internal/config"
 	"github.com/NicolasPaterno/warden-engine/internal/nats"
+	"github.com/NicolasPaterno/warden-engine/internal/tracing"
 	sensorv1 "github.com/NicolasPaterno/warden-proto/gen/go/warden/sensor/v1"
 	"github.com/joho/godotenv"
+	"go.opentelemetry.io/otel"
 )
 
 func main() {
@@ -27,6 +29,17 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	shutdown, err := tracing.Init(ctx, cfg.JaegerEndpoint)
+	if err != nil {
+		slog.Error("failed to init tracing", "error", err)
+		os.Exit(1)
+	}
+	defer func() {
+		if err := shutdown(ctx); err != nil {
+			slog.Error("failed to shutdown tracing", "error", err)
+		}
+	}()
+
 	sub, err := nats.NewSubscriber(cfg.NATSUrl)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "error", err)
@@ -39,6 +52,9 @@ func main() {
 	}()
 
 	if err := sub.Subscribe(ctx, func(ctx context.Context, reading *sensorv1.SensorReading) {
+		_, span := otel.Tracer("warden-engine").Start(ctx, "sensor.reading.received")
+		defer span.End()
+
 		slog.Info("reading received",
 			"room", reading.Room,
 			"type", reading.Type,
@@ -50,4 +66,5 @@ func main() {
 
 	<-ctx.Done()
 	slog.Info("shutting down")
+
 }
