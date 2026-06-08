@@ -19,8 +19,8 @@ func NewRuleRepo(pool *pgxpool.Pool) *RuleRepo {
 	}
 }
 
-func (r *RuleRepo) Save(ctx context.Context, rule engine.Rule) (engine.Rule, error) {
-	created, err := r.queries.CreateRule(ctx, db.CreateRuleParams{
+func (r *RuleRepo) Save(ctx context.Context, rule engine.Rule) error {
+	_, err := r.queries.CreateRule(ctx, db.CreateRuleParams{
 		ID:         rule.ID,
 		Name:       rule.Name,
 		Room:       rule.Room,
@@ -32,10 +32,7 @@ func (r *RuleRepo) Save(ctx context.Context, rule engine.Rule) (engine.Rule, err
 		Enabled:    rule.Enabled,
 		CreatedAt:  pgtype.Timestamptz{Time: rule.CreatedAt, Valid: true},
 	})
-	if err != nil {
-		return engine.Rule{}, err
-	}
-	return toEngineRule(created), nil
+	return err
 }
 
 func (r *RuleRepo) GetByID(ctx context.Context, id string) (engine.Rule, error) {
