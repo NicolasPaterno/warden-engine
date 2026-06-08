@@ -34,7 +34,18 @@ func (r *AlertRepo) Save(ctx context.Context, alert engine.Alert) (engine.Alert,
 	}
 	return toEngineAlert(created), nil
 }
-func (r *AlertRepo) GetAll(ctx context.Context) ([]engine.Alert, error)
+
+func (r *AlertRepo) GetByRoom(ctx context.Context, room string) ([]engine.Alert, error) {
+	alert, err := r.queries.GetAlertsByRoom(ctx, room)
+	if err != nil {
+		return nil, err
+	}
+	var alerts []engine.Alert
+	for _, alert := range alert {
+		alerts = append(alerts, toEngineAlert(alert))
+	}
+	return alerts, nil
+}
 
 func (r *AlertRepo) GetAll(ctx context.Context) ([]engine.Alert, error) {
 	rows, err := r.queries.GetAllAlerts(ctx)
