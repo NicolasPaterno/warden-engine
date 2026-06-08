@@ -32,7 +32,7 @@ func (s *EngineService) Evaluate(ctx context.Context, reading *sensorv1.SensorRe
 		if rule.Room != reading.Room {
 			continue
 		}
-		if string(rule.Condition.SensorType) != reading.Type.String() {
+		if rule.Condition.SensorType != fromProtoSensorType(reading.Type) {
 			continue
 		}
 		if evaluate(rule, reading.Value) {
@@ -40,7 +40,10 @@ func (s *EngineService) Evaluate(ctx context.Context, reading *sensorv1.SensorRe
 				Message  string `json:"message"`
 				Severity string `json:"severity"`
 			}
-			json.Unmarshal([]byte(rule.Action.Payload), &payload)
+			if err := json.Unmarshal([]byte(rule.Action.Payload), &payload); err != nil {
+				slog.Warn("invalid rule payload", "rule", rule.Name, "error", err)
+				continue
+			}
 
 			alert := engine.Alert{
 				ID:        uuid.NewString(),
@@ -76,5 +79,20 @@ func evaluate(rule engine.Rule, value float64) bool {
 		return value == rule.Condition.Threshold
 	default:
 		return false
+	}
+}
+
+func fromProtoSensorType(t sensorv1.SensorType) engine.SensorType {
+	switch t {
+	case sensorv1.SensorType_SENSOR_TYPE_TEMPERATURE:
+		return engine.Temperature
+	case sensorv1.SensorType_SENSOR_TYPE_HUMIDITY:
+		return engine.Humidity
+	case sensorv1.SensorType_SENSOR_TYPE_MOTION:
+		return engine.Motion
+	case sensorv1.SensorType_SENSOR_TYPE_CO2:
+		return engine.CO2
+	default:
+		return ""
 	}
 }
