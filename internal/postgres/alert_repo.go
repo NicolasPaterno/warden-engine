@@ -36,13 +36,13 @@ func (r *AlertRepo) Save(ctx context.Context, alert engine.Alert) (engine.Alert,
 }
 
 func (r *AlertRepo) GetByRoom(ctx context.Context, room string) ([]engine.Alert, error) {
-	alert, err := r.queries.GetAlertsByRoom(ctx, room)
+	rows, err := r.queries.GetAlertsByRoom(ctx, room)
 	if err != nil {
 		return nil, err
 	}
 	var alerts []engine.Alert
-	for _, alert := range alert {
-		alerts = append(alerts, toEngineAlert(alert))
+	for _, row := range rows {
+		alerts = append(alerts, toEngineAlert(row))
 	}
 	return alerts, nil
 }
