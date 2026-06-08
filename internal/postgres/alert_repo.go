@@ -19,8 +19,8 @@ func NewAlertRepo(pool *pgxpool.Pool) *AlertRepo {
 	}
 }
 
-func (r *AlertRepo) Save(ctx context.Context, alert engine.Alert) (engine.Alert, error) {
-	created, err := r.queries.CreateAlert(ctx, db.CreateAlertParams{
+func (r *AlertRepo) Save(ctx context.Context, alert engine.Alert) error {
+	_, err := r.queries.CreateAlert(ctx, db.CreateAlertParams{
 		ID:        alert.ID,
 		RuleID:    alert.RuleID,
 		Room:      alert.Room,
@@ -29,10 +29,7 @@ func (r *AlertRepo) Save(ctx context.Context, alert engine.Alert) (engine.Alert,
 		Value:     alert.Value,
 		CreatedAt: pgtype.Timestamptz{Time: alert.CreatedAt, Valid: true},
 	})
-	if err != nil {
-		return engine.Alert{}, err
-	}
-	return toEngineAlert(created), nil
+	return err
 }
 
 func (r *AlertRepo) GetByRoom(ctx context.Context, room string) ([]engine.Alert, error) {
