@@ -19,8 +19,6 @@ func NewAlertRepo(pool *pgxpool.Pool) *AlertRepo {
 	}
 }
 
-func (r *AlertRepo) Save(ctx context.Context, alert engine.Alert) error
-func (r *AlertRepo) GetByRoom(ctx context.Context, room string) ([]engine.Alert, error)
 func (r *AlertRepo) Save(ctx context.Context, alert engine.Alert) (engine.Alert, error) {
 	created, err := r.queries.CreateAlert(ctx, db.CreateAlertParams{
 		ID:        alert.ID,
@@ -37,6 +35,18 @@ func (r *AlertRepo) Save(ctx context.Context, alert engine.Alert) (engine.Alert,
 	return toEngineAlert(created), nil
 }
 func (r *AlertRepo) GetAll(ctx context.Context) ([]engine.Alert, error)
+
+func (r *AlertRepo) GetAll(ctx context.Context) ([]engine.Alert, error) {
+	rows, err := r.queries.GetAllAlerts(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var alerts []engine.Alert
+	for _, row := range rows {
+		alerts = append(alerts, toEngineAlert(row))
+	}
+	return alerts, nil
+}
 
 func toEngineAlert(a db.Alert) engine.Alert {
 	return engine.Alert{
