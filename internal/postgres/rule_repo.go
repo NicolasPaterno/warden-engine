@@ -70,7 +70,26 @@ func (r *RuleRepo) GetEnabled(ctx context.Context) ([]engine.Rule, error) {
 	return rules, nil
 }
 
-func (r *RuleRepo) Update(ctx context.Context, rule engine.Rule) (engine.Rule, error)
+func (r *RuleRepo) Update(ctx context.Context, rule engine.Rule) (engine.Rule, error) {
+	params := db.UpdateRuleParams{
+		ID:         rule.ID,
+		Name:       rule.Name,
+		Room:       rule.Room,
+		SensorType: toDBSensorType(rule.Condition.SensorType),
+		Operator:   toDBOperator(rule.Condition.Operator),
+		Threshold:  rule.Condition.Threshold,
+		ActionType: toDBActionType(rule.Action.Type),
+		Payload:    rule.Action.Payload,
+		Enabled:    rule.Enabled,
+	}
+
+	updated, err := r.queries.UpdateRule(ctx, params)
+	if err != nil {
+		return engine.Rule{}, err
+	}
+	return toEngineRule(updated), nil
+}
+
 func (r *RuleRepo) Delete(ctx context.Context, id string) error
 
 func toEngineRule(r db.Rule) engine.Rule {
