@@ -36,6 +36,9 @@ func TestRuleValidate(t *testing.T) {
 		{"unknown sensor type", func(r *Rule) { r.Condition.SensorType = "pressure" }, true},
 		{"unknown operator", func(r *Rule) { r.Condition.Operator = "between" }, true},
 		{"unknown action type", func(r *Rule) { r.Action.Type = "smoke_signal" }, true},
+		{"malformed payload JSON", func(r *Rule) { r.Action.Payload = "not json" }, true},
+		{"payload missing message", func(r *Rule) { r.Action.Payload = `{"severity":"warning"}` }, true},
+		{"payload invalid severity", func(r *Rule) { r.Action.Payload = `{"message":"x","severity":"banana"}` }, true},
 	}
 
 	for _, tt := range tests {
@@ -98,6 +101,24 @@ func TestOperatorValid(t *testing.T) {
 	for _, tt := range tests {
 		if got := tt.in.Valid(); got != tt.want {
 			t.Errorf("Operator(%q).Valid() = %v, want %v", tt.in, got, tt.want)
+		}
+	}
+}
+
+func TestAlertSeverityValid(t *testing.T) {
+	tests := []struct {
+		in   AlertSeverity
+		want bool
+	}{
+		{SeverityInfo, true},
+		{SeverityWarning, true},
+		{SeverityCritical, true},
+		{"banana", false},
+		{"", false},
+	}
+	for _, tt := range tests {
+		if got := tt.in.Valid(); got != tt.want {
+			t.Errorf("AlertSeverity(%q).Valid() = %v, want %v", tt.in, got, tt.want)
 		}
 	}
 }

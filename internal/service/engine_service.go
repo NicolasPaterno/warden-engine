@@ -36,10 +36,7 @@ func (s *EngineService) Evaluate(ctx context.Context, reading *sensorv1.SensorRe
 			continue
 		}
 		if evaluate(rule, reading.Value) {
-			var payload struct {
-				Message  string `json:"message"`
-				Severity string `json:"severity"`
-			}
+			var payload engine.AlertPayload
 			if err := json.Unmarshal([]byte(rule.Action.Payload), &payload); err != nil {
 				slog.Warn("invalid rule payload", "rule", rule.Name, "error", err)
 				continue
@@ -50,7 +47,7 @@ func (s *EngineService) Evaluate(ctx context.Context, reading *sensorv1.SensorRe
 				RuleID:    rule.ID,
 				Room:      rule.Room,
 				Message:   payload.Message,
-				Severity:  engine.AlertSeverity(payload.Severity),
+				Severity:  payload.Severity,
 				Value:     reading.Value,
 				CreatedAt: time.Now(),
 			}

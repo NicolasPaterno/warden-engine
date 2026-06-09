@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -39,6 +40,32 @@ type Condition struct {
 type Action struct {
 	Type    ActionType
 	Payload string
+}
+
+// AlertPayload is the JSON shape carried by an Action of type ActionAlert.
+type AlertPayload struct {
+	Message  string        `json:"message"`
+	Severity AlertSeverity `json:"severity"`
+}
+
+// validatePayload checks that the action's Payload is well-formed for its Type.
+// It returns an error wrapping ErrInvalid so a bad payload is rejected at create
+// time (400) instead of silently failing later, at evaluation.
+func (a Action) validatePayload() error {
+	switch a.Type {
+	case ActionAlert:
+		var p AlertPayload
+		if err := json.Unmarshal([]byte(a.Payload), &p); err != nil {
+			return fmt.Errorf("%w: action payload is not valid JSON: %v", ErrInvalid, err)
+		}
+		if p.Message == "" {
+			return fmt.Errorf("%w: action payload message is required", ErrInvalid)
+		}
+		if !p.Severity.Valid() {
+			return fmt.Errorf("%w: action payload severity %q", ErrInvalid, p.Severity)
+		}
+	}
+	return nil
 }
 
 type Rule struct {
@@ -98,6 +125,9 @@ func (r Rule) Validate() error {
 	}
 	if !r.Action.Type.Valid() {
 		return fmt.Errorf("%w: action type %q", ErrInvalid, r.Action.Type)
+	}
+	if err := r.Action.validatePayload(); err != nil {
+		return err
 	}
 	return nil
 }

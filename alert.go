@@ -19,3 +19,13 @@ type Alert struct {
 	Value     float64
 	CreatedAt time.Time
 }
+
+// Valid reports whether the severity is one the engine understands.
+func (s AlertSeverity) Valid() bool {
+	switch s {
+	case SeverityInfo, SeverityWarning, SeverityCritical:
+		return true
+	default:
+		return false
+	}
+}
