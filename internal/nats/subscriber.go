@@ -41,13 +41,13 @@ func NewSubscriber(url string) (*Subscriber, error) {
 
 func (s *Subscriber) Subscribe(ctx context.Context, handler func(ctx context.Context, reading *sensorv1.SensorReading)) error {
 	_, err := s.conn.Subscribe(subject, func(msg *natsgo.Msg) {
-		ctx = otel.GetTextMapPropagator().Extract(ctx, natsHeaderCarrier{msg.Header})
+		msgCtx := otel.GetTextMapPropagator().Extract(ctx, natsHeaderCarrier{msg.Header})
 		var reading sensorv1.SensorReading
 		if err := proto.Unmarshal(msg.Data, &reading); err != nil {
 			slog.Error("Failed to unmarshal reading", "error", err)
 			return
 		}
-		handler(ctx, &reading)
+		handler(msgCtx, &reading)
 	})
 	if err != nil {
 		return err
@@ -77,4 +77,8 @@ func (c natsHeaderCarrier) Keys() []string {
 		result = append(result, k)
 	}
 	return result
+}
+
+func (s *Subscriber) IsConnected() bool {
+	return s.conn.IsConnected()
 }
