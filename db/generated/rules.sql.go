@@ -59,13 +59,16 @@ func (q *Queries) CreateRule(ctx context.Context, arg CreateRuleParams) (Rule, e
 	return i, err
 }
 
-const deleteRule = `-- name: DeleteRule :exec
+const deleteRule = `-- name: DeleteRule :execrows
 DELETE FROM rules WHERE id = $1
 `
 
-func (q *Queries) DeleteRule(ctx context.Context, id string) error {
-	_, err := q.db.Exec(ctx, deleteRule, id)
-	return err
+func (q *Queries) DeleteRule(ctx context.Context, id string) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteRule, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getAllRules = `-- name: GetAllRules :many

@@ -137,9 +137,20 @@ func TestHandleGetRuleNotFound(t *testing.T) {
 }
 
 func TestHandleDeleteRule(t *testing.T) {
-	rec := doRequest(t, newTestRouter(&fakeRuleRepo{}), http.MethodDelete, "/api/rules/r1", "")
+	t.Run("existing rule returns 204", func(t *testing.T) {
+		rec := doRequest(t, newTestRouter(&fakeRuleRepo{}), http.MethodDelete, "/api/rules/r1", "")
 
-	if rec.Code != http.StatusNoContent {
-		t.Fatalf("status = %d, want 204", rec.Code)
-	}
+		if rec.Code != http.StatusNoContent {
+			t.Fatalf("status = %d, want 204", rec.Code)
+		}
+	})
+
+	t.Run("missing rule returns 404", func(t *testing.T) {
+		repo := &fakeRuleRepo{deleteErr: engine.ErrNotFound}
+		rec := doRequest(t, newTestRouter(repo), http.MethodDelete, "/api/rules/missing", "")
+
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("status = %d, want 404", rec.Code)
+		}
+	})
 }

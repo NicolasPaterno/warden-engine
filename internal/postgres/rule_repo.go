@@ -96,7 +96,14 @@ func (r *RuleRepo) Update(ctx context.Context, rule engine.Rule) (engine.Rule, e
 }
 
 func (r *RuleRepo) Delete(ctx context.Context, id string) error {
-	return r.queries.DeleteRule(ctx, id)
+	rows, err := r.queries.DeleteRule(ctx, id)
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return engine.ErrNotFound
+	}
+	return nil
 }
 
 func toEngineRule(r db.Rule) engine.Rule {

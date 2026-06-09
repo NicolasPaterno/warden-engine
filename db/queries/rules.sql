@@ -19,5 +19,5 @@ SET name = $2, room = $3, sensor_type = $4, operator = $5,
 WHERE id = $1
     RETURNING *;
 
--- name: DeleteRule :exec
+-- name: DeleteRule :execrows
 DELETE FROM rules WHERE id = $1;
