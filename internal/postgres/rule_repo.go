@@ -2,9 +2,11 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	engine "github.com/NicolasPaterno/warden-engine"
 	db "github.com/NicolasPaterno/warden-engine/db/generated"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -38,6 +40,9 @@ func (r *RuleRepo) Save(ctx context.Context, rule engine.Rule) error {
 func (r *RuleRepo) GetByID(ctx context.Context, id string) (engine.Rule, error) {
 	rule, err := r.queries.GetRuleByID(ctx, id)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return engine.Rule{}, engine.ErrNotFound
+		}
 		return engine.Rule{}, err
 	}
 	return toEngineRule(rule), nil
@@ -82,6 +87,9 @@ func (r *RuleRepo) Update(ctx context.Context, rule engine.Rule) (engine.Rule, e
 
 	updated, err := r.queries.UpdateRule(ctx, params)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return engine.Rule{}, engine.ErrNotFound
+		}
 		return engine.Rule{}, err
 	}
 	return toEngineRule(updated), nil
