@@ -44,6 +44,18 @@ func (r *AlertRepo) GetByRoom(ctx context.Context, room string) ([]engine.Alert,
 	return alerts, nil
 }
 
+func (r *AlertRepo) GetByRule(ctx context.Context, ruleID string) ([]engine.Alert, error) {
+	rows, err := r.queries.GetAlertsByRule(ctx, ruleID)
+	if err != nil {
+		return nil, err
+	}
+	var alerts []engine.Alert
+	for _, row := range rows {
+		alerts = append(alerts, toEngineAlert(row))
+	}
+	return alerts, nil
+}
+
 func (r *AlertRepo) GetAll(ctx context.Context) ([]engine.Alert, error) {
 	rows, err := r.queries.GetAllAlerts(ctx)
 	if err != nil {
