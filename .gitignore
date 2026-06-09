@@ -8,3 +8,6 @@
 *.out
 bin/
 .env
+
+# CI builds the binary to the repo root (see .github/workflows/ci.yml)
+/engine

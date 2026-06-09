@@ -1,0 +1,37 @@
+name: CI Engine
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: actions/cache@v4
+        id: golangci-cache
+        with:
+          path: ~/go/bin/golangci-lint
+          key: golangci-lint-${{ runner.os }}-${{ hashFiles('go.mod') }}
+
+      - name: Install golangci-lint
+        if: steps.golangci-cache.outputs.cache-hit != 'true'
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+      - name: Lint
+        run: golangci-lint run ./...
+
+      - name: Test
+        run: go test ./... -race
+
+      - name: Build
+        run: go build -o engine ./cmd/engine/main.go
