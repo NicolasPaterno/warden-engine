@@ -13,6 +13,10 @@ import (
 
 const subject = "warden.sensors.v1.>"
 
+// queueGroup makes all engine replicas share one queue: NATS delivers each
+// reading to exactly one member, so scaling out does not duplicate alerts.
+const queueGroup = "warden-engine"
+
 type Subscriber struct {
 	conn *natsgo.Conn
 }
@@ -40,7 +44,7 @@ func NewSubscriber(url string) (*Subscriber, error) {
 }
 
 func (s *Subscriber) Subscribe(ctx context.Context, handler func(ctx context.Context, reading *sensorv1.SensorReading)) error {
-	_, err := s.conn.Subscribe(subject, func(msg *natsgo.Msg) {
+	_, err := s.conn.QueueSubscribe(subject, queueGroup, func(msg *natsgo.Msg) {
 		msgCtx := otel.GetTextMapPropagator().Extract(ctx, natsHeaderCarrier{msg.Header})
 		var reading sensorv1.SensorReading
 		if err := proto.Unmarshal(msg.Data, &reading); err != nil {
