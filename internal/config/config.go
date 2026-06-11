@@ -7,6 +7,9 @@ type Config struct {
 	DatabaseURL    string
 	HTTPPort       string
 	JaegerEndpoint string
+	JWKSURL        string
+	Issuer         string
+	Audience       string
 }
 
 func Load() Config {
@@ -15,6 +18,9 @@ func Load() Config {
 		DatabaseURL:    getEnv("DATABASE_URL", "postgres://postgres:warden@localhost:5432/warden_engine_db"),
 		HTTPPort:       getEnv("HTTP_PORT", ":8081"),
 		JaegerEndpoint: getEnv("JAEGER_ENDPOINT", "localhost:4318"),
+		JWKSURL:        getEnv("JWKS_URL", "http://localhost:8082/.well-known/jwks.json"),
+		Issuer:         getEnv("ISSUER", "warden-auth"),
+		Audience:       getEnv("AUDIENCE", "warden-engine"),
 	}
 }
 

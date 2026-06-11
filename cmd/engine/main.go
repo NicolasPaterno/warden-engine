@@ -11,6 +11,7 @@ import (
 
 	"net/http"
 
+	"github.com/NicolasPaterno/warden-auth/authn"
 	"github.com/NicolasPaterno/warden-engine/internal/config"
 	httptransport "github.com/NicolasPaterno/warden-engine/internal/http"
 	"github.com/NicolasPaterno/warden-engine/internal/nats"
@@ -74,8 +75,10 @@ func main() {
 	alertService := service.NewAlertService(alertRepo)
 	engineService := service.NewEngineService(ruleRepo, alertRepo)
 
+	verifier := authn.New(cfg.JWKSURL, cfg.Issuer, cfg.Audience)
+
 	healthHandler := httptransport.NewHealthHandler(pool, sub)
-	router := httptransport.NewRouter(ruleService, alertService, healthHandler)
+	router := httptransport.NewRouter(ruleService, alertService, verifier, healthHandler)
 	server := &http.Server{Addr: cfg.HTTPPort, Handler: router}
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
