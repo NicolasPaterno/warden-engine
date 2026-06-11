@@ -73,6 +73,29 @@ func signEngineToken(t *testing.T, key *rsa.PrivateKey, scope string) string {
 	return s
 }
 
+func signDelegatedToken(t *testing.T, key *rsa.PrivateKey, actor string) string {
+	t.Helper()
+	now := time.Now()
+	claims := auth.Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   "user-1",
+			Issuer:    authTestIssuer,
+			Audience:  jwt.ClaimStrings{authTestAudience},
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(15 * time.Minute)),
+		},
+		Scope: "access",
+		Act:   &auth.Actor{Subject: actor},
+	}
+	tok := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	tok.Header["kid"] = authTestKID
+	s, err := tok.SignedString(key)
+	if err != nil {
+		t.Fatalf("sign token: %v", err)
+	}
+	return s
+}
+
 func TestRouterAuth(t *testing.T) {
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -98,6 +121,13 @@ func TestRouterAuth(t *testing.T) {
 
 	t.Run("valid access token passes through to handler", func(t *testing.T) {
 		rec := get(signEngineToken(t, key, "access"))
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200; body: %s", rec.Code, rec.Body.String())
+		}
+	})
+
+	t.Run("delegated token from exchange passes (user via service)", func(t *testing.T) {
+		rec := get(signDelegatedToken(t, key, "brain"))
 		if rec.Code != http.StatusOK {
 			t.Fatalf("status = %d, want 200; body: %s", rec.Code, rec.Body.String())
 		}
