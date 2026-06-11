@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: warden-engine-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: warden
+      POSTGRES_DB: warden_engine_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - engine_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d warden_engine_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: warden-engine-nats
+    # -m 8222 exposes the HTTP monitoring endpoint (used by the health check below)
+    command: ["-m", "8222"]
+    ports:
+      - "4222:4222"   # client connections
+      - "8222:8222"   # monitoring / healthz
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  engine_pgdata:
