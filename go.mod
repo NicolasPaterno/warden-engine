@@ -3,7 +3,7 @@ module github.com/NicolasPaterno/warden-engine
 go 1.26.3
 
 require (
-	github.com/NicolasPaterno/warden-auth v0.0.0-00010101000000-000000000000
+	github.com/NicolasPaterno/warden-auth v0.1.0
 	github.com/NicolasPaterno/warden-proto v0.1.0
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-jose/go-jose/v4 v4.1.4
@@ -44,5 +44,3 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/grpc v1.81.1 // indirect
 )
-
-replace github.com/NicolasPaterno/warden-auth => ../warden-auth
